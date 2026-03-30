@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+celery[redis]
+redis
+selenium
+webdriver-manager
+python-dotenv
+jinja2
+pydantic
+undetected-chromedriver
+pydantic-settings

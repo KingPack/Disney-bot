@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Disney Bot Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.5/css/bulma.min.css" />
+  </head>
+  <body>
+    <section class="section">
+      <div class="container">
+        <h1 class="title">Disney Bot</h1>
+        <p class="subtitle">Login by email/password or restore a cookie session.</p>
+
+        <div class="box">
+          <form id="start-form">
+            <div class="field">
+              <label class="label">Login method</label>
+              <div class="control">
+                <div class="select">
+                  <select id="login-mode" name="login_mode">
+                    <option value="credentials">Email / Password</option>
+                    <option value="cookies">Cookie Session</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div id="credentials-fields">
+              <div class="field">
+                <label class="label">Email</label>
+                <div class="control">
+                  <input class="input" type="email" name="email" placeholder="LinkedIn email" />
+                </div>
+              </div>
+              <div class="field">
+                <label class="label">Password</label>
+                <div class="control">
+                  <input class="input" type="password" name="password" placeholder="LinkedIn password" />
+                </div>
+              </div>
+            </div>
+
+            <div id="cookies-fields" style="display: none;">
+              <div class="field">
+                <label class="label">Cookies JSON</label>
+                <div class="control">
+                  <textarea class="textarea" name="cookies" placeholder='Paste LinkedIn cookies JSON array here'></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label">Keywords</label>
+              <div class="control">
+                <input class="input" type="text" name="query" placeholder="recruiter" value="recruiter" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label">Location</label>
+              <div class="control">
+                <input class="input" type="text" name="location" placeholder="San Francisco Bay Area" />
+              </div>
+            </div>
+
+            <div class="field is-grouped">
+              <div class="control">
+                <input class="input" type="number" name="limit" min="1" value="20" placeholder="Search limit" />
+              </div>
+              <div class="control">
+                <input class="input" type="number" name="connect_limit" min="1" value="5" placeholder="Connect limit" />
+              </div>
+            </div>
+
+            <div class="field is-grouped">
+              <div class="control">
+                <button class="button is-link" type="submit">Start Bot</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="box">
+          <h2 class="subtitle">Logs</h2>
+          <pre id="log-output">Waiting for bot activity...</pre>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      const loginModeSelect = document.getElementById('login-mode');
+      const credentialsFields = document.getElementById('credentials-fields');
+      const cookiesFields = document.getElementById('cookies-fields');
+      const form = document.getElementById('start-form');
+      const output = document.getElementById('log-output');
+
+      loginModeSelect.addEventListener('change', () => {
+        const mode = loginModeSelect.value;
+        credentialsFields.style.display = mode === 'credentials' ? 'block' : 'none';
+        cookiesFields.style.display = mode === 'cookies' ? 'block' : 'none';
+      });
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(form);
+        const data = {
+          query: formData.get('query'),
+          location: formData.get('location'),
+          limit: formData.get('limit'),
+          connect_limit: formData.get('connect_limit'),
+        };
+
+        if (loginModeSelect.value === 'credentials') {
+          data.email = formData.get('email');
+          data.password = formData.get('password');
+        } else {
+          const cookiesValue = formData.get('cookies');
+          try {
+            data.cookies = JSON.parse(cookiesValue || '[]');
+          } catch (error) {
+            output.textContent = 'Cookie JSON is invalid. Please provide a valid JSON array.';
+            return;
+          }
+        }
+
+        const response = await fetch('/api/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+        output.textContent = JSON.stringify(result, null, 2);
+      });
+    </script>
+  </body>
+</html>
